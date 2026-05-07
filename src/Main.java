@@ -11,7 +11,7 @@ public class Main {
         String user = "root";
         // MySQL username
 
-        String password = "<YOUR-SQL-PASSWORD>";
+        String password = "Shad1235!";
         // Replace with your MySQL root password
 
         try {
