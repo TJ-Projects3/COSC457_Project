@@ -6,7 +6,7 @@ public class DriverUI extends JFrame {
 
     String url = "jdbc:mysql://localhost:3306/food_delivery_db";
     String user = "root";
-    String password = "Shad1235!";
+    String password = DbConfig.getPassword();
 
     int driverId;
     JTextField deliveryIdField;
@@ -32,7 +32,7 @@ public class DriverUI extends JFrame {
         top.add(deliveryIdField);
 
         top.add(new JLabel("Status:"));
-        statusBox = new JComboBox<>(new String[] {"Assigned", "Picked Up", "Out for Delivery", "Delivered"});
+        statusBox = new JComboBox<>(new String[] { "Assigned", "Picked Up", "Out for Delivery", "Delivered" });
         top.add(statusBox);
 
         add(top, BorderLayout.NORTH);
@@ -69,12 +69,12 @@ public class DriverUI extends JFrame {
         output.setText("");
 
         try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(
-                     "SELECT d.delivery_id, d.order_id, d.delivery_status, v.restaurant_name " +
-                     "FROM Deliveries d " +
-                     "JOIN Orders o ON d.order_id=o.order_id " +
-                     "JOIN Vendors v ON o.vendor_id=v.vendor_id " +
-                     "WHERE d.driver_id=?")) {
+                PreparedStatement ps = conn.prepareStatement(
+                        "SELECT d.delivery_id, d.order_id, d.delivery_status, v.restaurant_name " +
+                                "FROM Deliveries d " +
+                                "JOIN Orders o ON d.order_id=o.order_id " +
+                                "JOIN Vendors v ON o.vendor_id=v.vendor_id " +
+                                "WHERE d.driver_id=?")) {
 
             ps.setInt(1, driverId);
 
@@ -98,14 +98,14 @@ public class DriverUI extends JFrame {
         output.setText("");
 
         try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(
-                     "SELECT d.delivery_id, v.restaurant_name, v.address, c.customer_name, " +
-                     "c.address AS customer_address, d.delivery_status " +
-                     "FROM Deliveries d " +
-                     "JOIN Orders o ON d.order_id=o.order_id " +
-                     "JOIN Vendors v ON o.vendor_id=v.vendor_id " +
-                     "JOIN Customers c ON o.customer_id=c.customer_id " +
-                     "WHERE d.delivery_id=? AND d.driver_id=?")) {
+                PreparedStatement ps = conn.prepareStatement(
+                        "SELECT d.delivery_id, v.restaurant_name, v.address, c.customer_name, " +
+                                "c.address AS customer_address, d.delivery_status " +
+                                "FROM Deliveries d " +
+                                "JOIN Orders o ON d.order_id=o.order_id " +
+                                "JOIN Vendors v ON o.vendor_id=v.vendor_id " +
+                                "JOIN Customers c ON o.customer_id=c.customer_id " +
+                                "WHERE d.delivery_id=? AND d.driver_id=?")) {
 
             ps.setInt(1, Integer.parseInt(deliveryIdField.getText()));
             ps.setInt(2, driverId);
@@ -146,7 +146,7 @@ public class DriverUI extends JFrame {
             if (statusBox.getSelectedItem().toString().equals("Delivered")) {
                 PreparedStatement ps2 = conn.prepareStatement(
                         "UPDATE Orders o JOIN Deliveries d ON o.order_id=d.order_id " +
-                        "SET o.status='Delivered' WHERE d.delivery_id=?");
+                                "SET o.status='Delivered' WHERE d.delivery_id=?");
 
                 ps2.setInt(1, Integer.parseInt(deliveryIdField.getText()));
                 ps2.executeUpdate();

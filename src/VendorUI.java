@@ -6,7 +6,7 @@ public class VendorUI extends JFrame {
 
     String url = "jdbc:mysql://localhost:3306/food_delivery_db";
     String user = "root";
-    String password = "Shad1235!";
+    String password = DbConfig.getPassword();
 
     int vendorId;
     JTextField orderIdField;
@@ -32,7 +32,7 @@ public class VendorUI extends JFrame {
         top.add(orderIdField);
 
         top.add(new JLabel("Status:"));
-        statusBox = new JComboBox<>(new String[] {"Placed", "Preparing", "Ready for Pickup"});
+        statusBox = new JComboBox<>(new String[] { "Placed", "Preparing", "Ready for Pickup" });
         top.add(statusBox);
 
         add(top, BorderLayout.NORTH);
@@ -69,10 +69,10 @@ public class VendorUI extends JFrame {
         output.setText("");
 
         try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(
-                     "SELECT o.order_id, c.customer_name, o.status, o.total " +
-                     "FROM Orders o JOIN Customers c ON o.customer_id=c.customer_id " +
-                     "WHERE o.vendor_id=?")) {
+                PreparedStatement ps = conn.prepareStatement(
+                        "SELECT o.order_id, c.customer_name, o.status, o.total " +
+                                "FROM Orders o JOIN Customers c ON o.customer_id=c.customer_id " +
+                                "WHERE o.vendor_id=?")) {
 
             ps.setInt(1, vendorId);
 
@@ -95,8 +95,8 @@ public class VendorUI extends JFrame {
         output.setText("");
 
         try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(
-                     "SELECT item_name, price FROM MenuItems WHERE vendor_id=?")) {
+                PreparedStatement ps = conn.prepareStatement(
+                        "SELECT item_name, price FROM MenuItems WHERE vendor_id=?")) {
 
             ps.setInt(1, vendorId);
 
@@ -117,8 +117,8 @@ public class VendorUI extends JFrame {
         output.setText("");
 
         try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(
-                     "UPDATE Orders SET status=? WHERE order_id=? AND vendor_id=?")) {
+                PreparedStatement ps = conn.prepareStatement(
+                        "UPDATE Orders SET status=? WHERE order_id=? AND vendor_id=?")) {
 
             ps.setString(1, statusBox.getSelectedItem().toString());
             ps.setInt(2, Integer.parseInt(orderIdField.getText()));

@@ -6,7 +6,7 @@ public class LoginUI extends JFrame {
 
     String url = "jdbc:mysql://localhost:3306/food_delivery_db";
     String user = "root";
-    String password = "Shad1235!";
+    String password = DbConfig.getPassword();
 
     JTextField emailField;
     JPasswordField passwordField;
@@ -30,7 +30,7 @@ public class LoginUI extends JFrame {
         top.add(passwordField);
 
         top.add(new JLabel("Role:"));
-        roleBox = new JComboBox<>(new String[] {"Customer", "Vendor", "Driver", "Admin"});
+        roleBox = new JComboBox<>(new String[] { "Customer", "Vendor", "Driver", "Admin" });
         top.add(roleBox);
 
         add(top, BorderLayout.NORTH);

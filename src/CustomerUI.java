@@ -6,7 +6,7 @@ public class CustomerUI extends JFrame {
 
     String url = "jdbc:mysql://localhost:3306/food_delivery_db";
     String user = "root";
-    String password = "Shad1235!";
+    String password = DbConfig.getPassword();
 
     int customerId;
     JComboBox<String> restaurantBox, menuBox;
@@ -90,10 +90,10 @@ public class CustomerUI extends JFrame {
         restaurantBox.removeAllItems();
 
         try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(
-                     "SELECT vendor_id, restaurant_name FROM Vendors " +
-                     "WHERE distance_miles <= 20 ORDER BY restaurant_name");
-             ResultSet rs = ps.executeQuery()) {
+                PreparedStatement ps = conn.prepareStatement(
+                        "SELECT vendor_id, restaurant_name FROM Vendors " +
+                                "WHERE distance_miles <= 20 ORDER BY restaurant_name");
+                ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 restaurantBox.addItem(rs.getInt("vendor_id") + " - " + rs.getString("restaurant_name"));
@@ -114,9 +114,9 @@ public class CustomerUI extends JFrame {
         }
 
         try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(
-                     "SELECT item_id, item_name, price FROM MenuItems " +
-                     "WHERE vendor_id=? ORDER BY item_name")) {
+                PreparedStatement ps = conn.prepareStatement(
+                        "SELECT item_id, item_name, price FROM MenuItems " +
+                                "WHERE vendor_id=? ORDER BY item_name")) {
 
             ps.setInt(1, selectedId(restaurantBox));
             ResultSet rs = ps.executeQuery();
@@ -137,10 +137,10 @@ public class CustomerUI extends JFrame {
         output.setText("");
 
         try (Connection conn = getConn();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(
-                     "SELECT vendor_id, restaurant_name, address, distance_miles " +
-                     "FROM Vendors WHERE distance_miles <= 20")) {
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(
+                        "SELECT vendor_id, restaurant_name, address, distance_miles " +
+                                "FROM Vendors WHERE distance_miles <= 20")) {
 
             while (rs.next()) {
                 output.append(rs.getInt("vendor_id") + " | " +
@@ -162,8 +162,8 @@ public class CustomerUI extends JFrame {
         }
 
         try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(
-                     "SELECT item_name, price FROM MenuItems WHERE vendor_id=?")) {
+                PreparedStatement ps = conn.prepareStatement(
+                        "SELECT item_name, price FROM MenuItems WHERE vendor_id=?")) {
 
             ps.setInt(1, selectedId(restaurantBox));
             ResultSet rs = ps.executeQuery();
@@ -205,7 +205,7 @@ public class CustomerUI extends JFrame {
 
             PreparedStatement orderPs = conn.prepareStatement(
                     "INSERT INTO Orders(customer_id, vendor_id, status, total) " +
-                    "VALUES (?, ?, 'Placed', ?)",
+                            "VALUES (?, ?, 'Placed', ?)",
                     Statement.RETURN_GENERATED_KEYS);
 
             orderPs.setInt(1, customerId);
@@ -230,7 +230,8 @@ public class CustomerUI extends JFrame {
             detailPs.executeUpdate();
             detailPs.close();
 
-            PreparedStatement driverPs = conn.prepareStatement("SELECT driver_id FROM Drivers ORDER BY driver_id LIMIT 1");
+            PreparedStatement driverPs = conn
+                    .prepareStatement("SELECT driver_id FROM Drivers ORDER BY driver_id LIMIT 1");
             ResultSet driverRs = driverPs.executeQuery();
 
             if (driverRs.next()) {
@@ -257,10 +258,10 @@ public class CustomerUI extends JFrame {
         output.setText("");
 
         try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(
-                     "SELECT o.order_id, v.restaurant_name, o.status, o.total, o.order_date " +
-                     "FROM Orders o JOIN Vendors v ON o.vendor_id=v.vendor_id " +
-                     "WHERE o.customer_id=? ORDER BY o.order_id DESC")) {
+                PreparedStatement ps = conn.prepareStatement(
+                        "SELECT o.order_id, v.restaurant_name, o.status, o.total, o.order_date " +
+                                "FROM Orders o JOIN Vendors v ON o.vendor_id=v.vendor_id " +
+                                "WHERE o.customer_id=? ORDER BY o.order_id DESC")) {
 
             ps.setInt(1, customerId);
 
@@ -285,8 +286,8 @@ public class CustomerUI extends JFrame {
         output.setText("");
 
         try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(
-                     "SELECT order_id, status, total FROM Orders WHERE order_id=? AND customer_id=?")) {
+                PreparedStatement ps = conn.prepareStatement(
+                        "SELECT order_id, status, total FROM Orders WHERE order_id=? AND customer_id=?")) {
 
             ps.setInt(1, Integer.parseInt(orderIdField.getText()));
             ps.setInt(2, customerId);
@@ -307,4 +308,3 @@ public class CustomerUI extends JFrame {
         }
     }
 }
-

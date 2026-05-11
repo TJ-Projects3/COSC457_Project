@@ -6,7 +6,7 @@ public class RegisterUI extends JFrame {
 
     String url = "jdbc:mysql://localhost:3306/food_delivery_db";
     String user = "root";
-    String password = "Shad1235!";
+    String password = DbConfig.getPassword();
 
     JTextField emailField, nameField, phoneField, addressField;
     JPasswordField passwordField;
@@ -41,7 +41,7 @@ public class RegisterUI extends JFrame {
         top.add(addressField);
 
         top.add(new JLabel("Role:"));
-        roleBox = new JComboBox<>(new String[] {"Customer", "Vendor", "Driver"});
+        roleBox = new JComboBox<>(new String[] { "Customer", "Vendor", "Driver" });
         top.add(roleBox);
 
         add(top, BorderLayout.NORTH);
@@ -86,7 +86,7 @@ public class RegisterUI extends JFrame {
             if (role.equals("Customer")) {
                 ps = conn.prepareStatement(
                         "INSERT INTO Customers(email, password, customer_name, phone, address) " +
-                        "VALUES (?, ?, ?, ?, ?)");
+                                "VALUES (?, ?, ?, ?, ?)");
                 ps.setString(1, email);
                 ps.setString(2, pass);
                 ps.setString(3, name);
@@ -96,7 +96,7 @@ public class RegisterUI extends JFrame {
             } else if (role.equals("Vendor")) {
                 ps = conn.prepareStatement(
                         "INSERT INTO Vendors(email, password, restaurant_name, address, distance_miles) " +
-                        "VALUES (?, ?, ?, ?, 5)");
+                                "VALUES (?, ?, ?, ?, 5)");
                 ps.setString(1, email);
                 ps.setString(2, pass);
                 ps.setString(3, name);
@@ -105,7 +105,7 @@ public class RegisterUI extends JFrame {
             } else {
                 ps = conn.prepareStatement(
                         "INSERT INTO Drivers(email, password, driver_name, phone) " +
-                        "VALUES (?, ?, ?, ?)");
+                                "VALUES (?, ?, ?, ?)");
                 ps.setString(1, email);
                 ps.setString(2, pass);
                 ps.setString(3, name);

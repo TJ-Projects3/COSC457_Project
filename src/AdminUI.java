@@ -6,7 +6,7 @@ public class AdminUI extends JFrame {
 
     String url = "jdbc:mysql://localhost:3306/food_delivery_db";
     String user = "root";
-    String password = "Shad1235!";
+    String password = DbConfig.getPassword();
 
     JTextField deleteOrderField, deleteCustomerField;
     JTextArea output;
@@ -76,8 +76,8 @@ public class AdminUI extends JFrame {
         output.setText("");
 
         try (Connection conn = getConn();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT customer_id, customer_name, email FROM Customers")) {
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery("SELECT customer_id, customer_name, email FROM Customers")) {
 
             while (rs.next()) {
                 output.append(rs.getInt("customer_id") + " | " +
@@ -94,8 +94,8 @@ public class AdminUI extends JFrame {
         output.setText("");
 
         try (Connection conn = getConn();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT vendor_id, restaurant_name, address FROM Vendors")) {
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery("SELECT vendor_id, restaurant_name, address FROM Vendors")) {
 
             while (rs.next()) {
                 output.append(rs.getInt("vendor_id") + " | " +
@@ -112,9 +112,9 @@ public class AdminUI extends JFrame {
         output.setText("");
 
         try (Connection conn = getConn();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(
-                     "SELECT order_id, customer_id, vendor_id, status, total FROM Orders")) {
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(
+                        "SELECT order_id, customer_id, vendor_id, status, total FROM Orders")) {
 
             while (rs.next()) {
                 output.append(rs.getInt("order_id") + " | Customer " +
@@ -132,10 +132,10 @@ public class AdminUI extends JFrame {
         output.setText("");
 
         try (Connection conn = getConn();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(
-                     "SELECT d.delivery_id, d.order_id, dr.driver_name, d.delivery_status " +
-                     "FROM Deliveries d JOIN Drivers dr ON d.driver_id=dr.driver_id")) {
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(
+                        "SELECT d.delivery_id, d.order_id, dr.driver_name, d.delivery_status " +
+                                "FROM Deliveries d JOIN Drivers dr ON d.driver_id=dr.driver_id")) {
 
             while (rs.next()) {
                 output.append(rs.getInt("delivery_id") + " | Order " +
@@ -153,15 +153,15 @@ public class AdminUI extends JFrame {
         output.setText("");
 
         try (Connection conn = getConn();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(
-                     "SELECT o.order_id, c.customer_name, v.restaurant_name, dr.driver_name, " +
-                     "o.status, d.delivery_status " +
-                     "FROM Orders o " +
-                     "JOIN Customers c ON o.customer_id=c.customer_id " +
-                     "JOIN Vendors v ON o.vendor_id=v.vendor_id " +
-                     "LEFT JOIN Deliveries d ON o.order_id=d.order_id " +
-                     "LEFT JOIN Drivers dr ON d.driver_id=dr.driver_id")) {
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(
+                        "SELECT o.order_id, c.customer_name, v.restaurant_name, dr.driver_name, " +
+                                "o.status, d.delivery_status " +
+                                "FROM Orders o " +
+                                "JOIN Customers c ON o.customer_id=c.customer_id " +
+                                "JOIN Vendors v ON o.vendor_id=v.vendor_id " +
+                                "LEFT JOIN Deliveries d ON o.order_id=d.order_id " +
+                                "LEFT JOIN Drivers dr ON d.driver_id=dr.driver_id")) {
 
             while (rs.next()) {
                 output.append(rs.getInt("order_id") + " | " +
@@ -181,9 +181,9 @@ public class AdminUI extends JFrame {
         output.setText("");
 
         try (Connection conn = getConn();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(
-                     "SELECT COUNT(*) AS total_orders, SUM(total) AS total_revenue FROM Orders")) {
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(
+                        "SELECT COUNT(*) AS total_orders, SUM(total) AS total_revenue FROM Orders")) {
 
             if (rs.next()) {
                 output.setText("Orders: " + rs.getInt("total_orders") +
@@ -199,7 +199,7 @@ public class AdminUI extends JFrame {
         output.setText("");
 
         try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement("DELETE FROM Orders WHERE order_id=?")) {
+                PreparedStatement ps = conn.prepareStatement("DELETE FROM Orders WHERE order_id=?")) {
 
             ps.setInt(1, Integer.parseInt(deleteOrderField.getText()));
             int rows = ps.executeUpdate();
@@ -214,7 +214,7 @@ public class AdminUI extends JFrame {
         output.setText("");
 
         try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement("DELETE FROM Customers WHERE customer_id=?")) {
+                PreparedStatement ps = conn.prepareStatement("DELETE FROM Customers WHERE customer_id=?")) {
 
             ps.setInt(1, Integer.parseInt(deleteCustomerField.getText()));
             int rows = ps.executeUpdate();
