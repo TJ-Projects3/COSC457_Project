@@ -13,7 +13,7 @@ public class AdminUI extends JFrame {
 
     public AdminUI() {
         setTitle("Admin Screen");
-        setSize(600, 400);
+        setSize(600, 450);
         setLayout(new BorderLayout());
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -33,7 +33,7 @@ public class AdminUI extends JFrame {
         output.setEditable(false);
         add(new JScrollPane(output), BorderLayout.CENTER);
 
-        JPanel bottom = new JPanel(new GridLayout(2, 4));
+        JPanel bottom = new JPanel(new GridLayout(3, 4));
 
         JButton customersBtn = new JButton("Customers");
         JButton vendorsBtn = new JButton("Vendors");
@@ -43,6 +43,9 @@ public class AdminUI extends JFrame {
         JButton summaryBtn = new JButton("Summary");
         JButton deleteOrderBtn = new JButton("Delete Order");
         JButton deleteCustomerBtn = new JButton("Delete Customer");
+        JButton ordersByVendorBtn = new JButton("Orders by Vendor");
+        JButton revenueByVendorBtn = new JButton("Revenue by Vendor");
+        JButton deliveriesByDriverBtn = new JButton("Deliveries by Driver");
 
         bottom.add(customersBtn);
         bottom.add(vendorsBtn);
@@ -52,6 +55,9 @@ public class AdminUI extends JFrame {
         bottom.add(summaryBtn);
         bottom.add(deleteOrderBtn);
         bottom.add(deleteCustomerBtn);
+        bottom.add(ordersByVendorBtn);
+        bottom.add(revenueByVendorBtn);
+        bottom.add(deliveriesByDriverBtn);
 
         add(bottom, BorderLayout.SOUTH);
 
@@ -63,6 +69,9 @@ public class AdminUI extends JFrame {
         summaryBtn.addActionListener(e -> summaryReport());
         deleteOrderBtn.addActionListener(e -> deleteOrder());
         deleteCustomerBtn.addActionListener(e -> deleteCustomer());
+        ordersByVendorBtn.addActionListener(e -> ordersByVendor());
+        revenueByVendorBtn.addActionListener(e -> revenueByVendor());
+        deliveriesByDriverBtn.addActionListener(e -> deliveriesByDriver());
 
         setVisible(true);
     }
@@ -219,6 +228,80 @@ public class AdminUI extends JFrame {
             ps.setInt(1, Integer.parseInt(deleteCustomerField.getText()));
             int rows = ps.executeUpdate();
             output.setText(rows + " customer deleted.");
+
+        } catch (Exception ex) {
+            output.setText(ex.getMessage());
+        }
+    }
+
+    private void ordersByVendor() {
+        output.setText("");
+
+        try (Connection conn = getConn();
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(
+                        "SELECT v.restaurant_name, COUNT(o.order_id) AS order_count " +
+                                "FROM Orders o " +
+                                "JOIN Vendors v ON o.vendor_id = v.vendor_id " +
+                                "GROUP BY v.vendor_id, v.restaurant_name " +
+                                "ORDER BY order_count DESC")) {
+
+            output.append("ORDERS PER RESTAURANT\n");
+            output.append("------------------------------------\n");
+
+            while (rs.next()) {
+                output.append(rs.getString("restaurant_name") + " | " +
+                        rs.getInt("order_count") + " orders\n");
+            }
+
+        } catch (Exception ex) {
+            output.setText(ex.getMessage());
+        }
+    }
+
+    private void revenueByVendor() {
+        output.setText("");
+
+        try (Connection conn = getConn();
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(
+                        "SELECT v.restaurant_name, SUM(o.total) AS total_revenue " +
+                                "FROM Orders o " +
+                                "JOIN Vendors v ON o.vendor_id = v.vendor_id " +
+                                "GROUP BY v.vendor_id, v.restaurant_name " +
+                                "ORDER BY total_revenue DESC")) {
+
+            output.append("REVENUE PER RESTAURANT\n");
+            output.append("------------------------------------\n");
+
+            while (rs.next()) {
+                output.append(rs.getString("restaurant_name") + " | $" +
+                        rs.getDouble("total_revenue") + "\n");
+            }
+
+        } catch (Exception ex) {
+            output.setText(ex.getMessage());
+        }
+    }
+
+    private void deliveriesByDriver() {
+        output.setText("");
+
+        try (Connection conn = getConn();
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(
+                        "SELECT dr.driver_name, COUNT(d.delivery_id) AS delivery_count " +
+                                "FROM Deliveries d " +
+                                "JOIN Drivers dr ON d.driver_id = dr.driver_id " +
+                                "GROUP BY dr.driver_id, dr.driver_name")) {
+
+            output.append("DELIVERIES PER DRIVER\n");
+            output.append("------------------------------------\n");
+
+            while (rs.next()) {
+                output.append(rs.getString("driver_name") + " | " +
+                        rs.getInt("delivery_count") + " deliveries\n");
+            }
 
         } catch (Exception ex) {
             output.setText(ex.getMessage());
