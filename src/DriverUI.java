@@ -1,4 +1,4 @@
-﻿import javax.swing.*;
+import javax.swing.*;
 import java.awt.*;
 import java.sql.*;
 
@@ -9,6 +9,7 @@ public class DriverUI extends JFrame {
     String password = DbConfig.getPassword();
 
     int driverId;
+
     JTextField deliveryIdField;
     JComboBox<String> statusBox;
     JTextArea output;
@@ -18,6 +19,7 @@ public class DriverUI extends JFrame {
     }
 
     public DriverUI(int driverId) {
+
         this.driverId = driverId;
 
         setTitle("Driver Screen");
@@ -28,17 +30,26 @@ public class DriverUI extends JFrame {
         JPanel top = new JPanel(new GridLayout(2, 2));
 
         top.add(new JLabel("Delivery ID:"));
+
         deliveryIdField = new JTextField();
         top.add(deliveryIdField);
 
         top.add(new JLabel("Status:"));
-        statusBox = new JComboBox<>(new String[] { "Assigned", "Picked Up", "Out for Delivery", "Delivered" });
+
+        statusBox = new JComboBox<>(new String[] {
+                "Assigned",
+                "Picked Up",
+                "Out for Delivery",
+                "Delivered"
+        });
+
         top.add(statusBox);
 
         add(top, BorderLayout.NORTH);
 
         output = new JTextArea();
         output.setEditable(false);
+
         add(new JScrollPane(output), BorderLayout.CENTER);
 
         JPanel bottom = new JPanel(new GridLayout(1, 3));
@@ -61,51 +72,74 @@ public class DriverUI extends JFrame {
     }
 
     private Connection getConn() throws Exception {
+
         Class.forName("com.mysql.cj.jdbc.Driver");
-        return DriverManager.getConnection(url, user, password);
+
+        return DriverManager.getConnection(
+                url,
+                user,
+                password
+        );
     }
 
     private void viewDeliveries() {
+
         output.setText("");
 
         try (Connection conn = getConn();
-                PreparedStatement ps = conn.prepareStatement(
-                        "SELECT d.delivery_id, d.order_id, d.delivery_status, v.restaurant_name " +
-                                "FROM Deliveries d " +
-                                "JOIN Orders o ON d.order_id=o.order_id " +
-                                "JOIN Vendors v ON o.vendor_id=v.vendor_id " +
-                                "WHERE d.driver_id=?")) {
+
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT d.delivery_id, d.order_id, d.delivery_status, " +
+                             "v.restaurant_name " +
+                             "FROM Deliveries d " +
+                             "JOIN Orders o ON d.order_id = o.order_id " +
+                             "JOIN Vendors v ON o.vendor_id = v.vendor_id " +
+                             "WHERE d.driver_id = ?")) {
 
             ps.setInt(1, driverId);
 
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-                output.append(rs.getInt("delivery_id") + " | Order " +
-                        rs.getInt("order_id") + " | " +
-                        rs.getString("restaurant_name") + " | " +
-                        rs.getString("delivery_status") + "\n");
+
+                output.append(
+                        rs.getInt("delivery_id")
+                                + " | Order "
+                                + rs.getInt("order_id")
+                                + " | "
+                                + rs.getString("restaurant_name")
+                                + " | "
+                                + rs.getString("delivery_status")
+                                + "\n"
+                );
             }
 
             rs.close();
 
         } catch (Exception ex) {
+
             output.setText(ex.getMessage());
         }
     }
 
     private void viewInfo() {
+
         output.setText("");
 
         try (Connection conn = getConn();
-                PreparedStatement ps = conn.prepareStatement(
-                        "SELECT d.delivery_id, v.restaurant_name, v.address, c.customer_name, " +
-                                "c.address AS customer_address, d.delivery_status " +
-                                "FROM Deliveries d " +
-                                "JOIN Orders o ON d.order_id=o.order_id " +
-                                "JOIN Vendors v ON o.vendor_id=v.vendor_id " +
-                                "JOIN Customers c ON o.customer_id=c.customer_id " +
-                                "WHERE d.delivery_id=? AND d.driver_id=?")) {
+
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT d.delivery_id, " +
+                             "v.restaurant_name, " +
+                             "v.address, " +
+                             "c.customer_name, " +
+                             "c.address AS customer_address, " +
+                             "d.delivery_status " +
+                             "FROM Deliveries d " +
+                             "JOIN Orders o ON d.order_id = o.order_id " +
+                             "JOIN Vendors v ON o.vendor_id = v.vendor_id " +
+                             "JOIN Customers c ON o.customer_id = c.customer_id " +
+                             "WHERE d.delivery_id = ? AND d.driver_id = ?")) {
 
             ps.setInt(1, Integer.parseInt(deliveryIdField.getText()));
             ps.setInt(2, driverId);
@@ -113,49 +147,77 @@ public class DriverUI extends JFrame {
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-                output.setText("Pickup: " + rs.getString("restaurant_name") +
-                        " - " + rs.getString("address") + "\n" +
-                        "Deliver to: " + rs.getString("customer_name") +
-                        " - " + rs.getString("customer_address") + "\n" +
-                        "Status: " + rs.getString("delivery_status"));
+
+                output.setText(
+                        "Pickup: "
+                                + rs.getString("restaurant_name")
+                                + " - "
+                                + rs.getString("address")
+                                + "\nDeliver to: "
+                                + rs.getString("customer_name")
+                                + " - "
+                                + rs.getString("customer_address")
+                                + "\nStatus: "
+                                + rs.getString("delivery_status")
+                );
+
             } else {
+
                 output.setText("Delivery not found.");
             }
 
             rs.close();
 
         } catch (Exception ex) {
+
             output.setText(ex.getMessage());
         }
     }
 
     private void updateDelivery() {
+
         output.setText("");
 
-        try (Connection conn = getConn()) {
-            PreparedStatement ps = conn.prepareStatement(
-                    "UPDATE Deliveries SET delivery_status=? WHERE delivery_id=? AND driver_id=?");
+        try (Connection conn = getConn();
+
+             PreparedStatement ps = conn.prepareStatement(
+                     "UPDATE Deliveries " +
+                             "SET delivery_status = ? " +
+                             "WHERE delivery_id = ? AND driver_id = ?")) {
 
             ps.setString(1, statusBox.getSelectedItem().toString());
-            ps.setInt(2, Integer.parseInt(deliveryIdField.getText()));
+
+            ps.setInt(2,
+                    Integer.parseInt(deliveryIdField.getText()));
+
             ps.setInt(3, driverId);
 
             int rows = ps.executeUpdate();
-            ps.close();
 
-            if (statusBox.getSelectedItem().toString().equals("Delivered")) {
+            if (statusBox.getSelectedItem()
+                    .toString()
+                    .equals("Delivered")) {
+
                 PreparedStatement ps2 = conn.prepareStatement(
-                        "UPDATE Orders o JOIN Deliveries d ON o.order_id=d.order_id " +
-                                "SET o.status='Delivered' WHERE d.delivery_id=?");
+                        "UPDATE Orders o " +
+                                "JOIN Deliveries d " +
+                                "ON o.order_id = d.order_id " +
+                                "SET o.status = 'Delivered' " +
+                                "WHERE d.delivery_id = ?"
+                );
 
-                ps2.setInt(1, Integer.parseInt(deliveryIdField.getText()));
+                ps2.setInt(1,
+                        Integer.parseInt(deliveryIdField.getText()));
+
                 ps2.executeUpdate();
+
                 ps2.close();
             }
 
             output.setText(rows + " delivery updated.");
 
         } catch (Exception ex) {
+
             output.setText(ex.getMessage());
         }
     }

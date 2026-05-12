@@ -1,4 +1,4 @@
-﻿import javax.swing.*;
+import javax.swing.*;
 import java.awt.*;
 import java.sql.*;
 
@@ -30,7 +30,12 @@ public class LoginUI extends JFrame {
         top.add(passwordField);
 
         top.add(new JLabel("Role:"));
-        roleBox = new JComboBox<>(new String[] { "Customer", "Vendor", "Driver", "Admin" });
+        roleBox = new JComboBox<>(new String[] {
+                "Customer",
+                "Vendor",
+                "Driver",
+                "Admin"
+        });
         top.add(roleBox);
 
         add(top, BorderLayout.NORTH);
@@ -73,6 +78,7 @@ public class LoginUI extends JFrame {
         }
 
         try (Connection conn = getConn()) {
+
             String sql;
             String idColumn;
 
@@ -98,17 +104,19 @@ public class LoginUI extends JFrame {
 
             if (rs.next()) {
                 int userId = rs.getInt(idColumn);
+
                 dispose();
 
                 if (role.equals("Customer")) {
                     new CustomerUI(userId);
                 } else if (role.equals("Vendor")) {
-                    new VendorUI();
+                    new VendorUI(userId);
                 } else if (role.equals("Driver")) {
-                    new DriverUI();
+                    new DriverUI(userId);
                 } else {
                     new AdminUI();
                 }
+
             } else {
                 output.setText("Invalid login.");
             }

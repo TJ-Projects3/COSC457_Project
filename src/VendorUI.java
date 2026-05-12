@@ -1,17 +1,13 @@
-﻿import javax.swing.*;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.sql.*;
 
 public class VendorUI extends JFrame {
 
-    String url = "jdbc:mysql://localhost:3306/food_delivery_db";
-    String user = "root";
-    String password = DbConfig.getPassword();
-
-    int vendorId;
-    JTextField orderIdField;
-    JComboBox<String> statusBox;
-    JTextArea output;
+    private JTable orderTable;
+    private DefaultTableModel model;
+    private int vendorId;
 
     public VendorUI() {
         this(1);
@@ -20,115 +16,115 @@ public class VendorUI extends JFrame {
     public VendorUI(int vendorId) {
         this.vendorId = vendorId;
 
-        setTitle("Vendor Screen");
-        setSize(500, 350);
-        setLayout(new BorderLayout());
+        setTitle("Vendor Dashboard");
+        setSize(750, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
 
-        JPanel top = new JPanel(new GridLayout(2, 2));
+        JLabel title = new JLabel("Vendor Dashboard - Manage Orders", JLabel.CENTER);
+        title.setFont(new Font("Arial", Font.BOLD, 20));
 
-        top.add(new JLabel("Order ID:"));
-        orderIdField = new JTextField();
-        top.add(orderIdField);
+        model = new DefaultTableModel();
+        model.setColumnIdentifiers(new String[] {
+                "Order ID",
+                "Customer ID",
+                "Status",
+                "Total"
+        });
 
-        top.add(new JLabel("Status:"));
-        statusBox = new JComboBox<>(new String[] { "Placed", "Preparing", "Ready for Pickup" });
-        top.add(statusBox);
+        orderTable = new JTable(model);
+        JScrollPane scrollPane = new JScrollPane(orderTable);
 
-        add(top, BorderLayout.NORTH);
+        JButton refreshButton = new JButton("Refresh Orders");
+        JButton preparingButton = new JButton("Set Preparing");
+        JButton readyButton = new JButton("Set Ready for Pickup");
+        JButton deliveredButton = new JButton("Set Delivered");
 
-        output = new JTextArea();
-        output.setEditable(false);
-        add(new JScrollPane(output), BorderLayout.CENTER);
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(refreshButton);
+        buttonPanel.add(preparingButton);
+        buttonPanel.add(readyButton);
+        buttonPanel.add(deliveredButton);
 
-        JPanel bottom = new JPanel(new GridLayout(1, 3));
+        add(title, BorderLayout.NORTH);
+        add(scrollPane, BorderLayout.CENTER);
+        add(buttonPanel, BorderLayout.SOUTH);
 
-        JButton viewBtn = new JButton("View Orders");
-        JButton menuBtn = new JButton("View Menu");
-        JButton updateBtn = new JButton("Update");
+        refreshButton.addActionListener(e -> loadOrders());
+        preparingButton.addActionListener(e -> updateOrderStatus("Preparing"));
+        readyButton.addActionListener(e -> updateOrderStatus("Ready for Pickup"));
+        deliveredButton.addActionListener(e -> updateOrderStatus("Delivered"));
 
-        bottom.add(viewBtn);
-        bottom.add(menuBtn);
-        bottom.add(updateBtn);
-
-        add(bottom, BorderLayout.SOUTH);
-
-        viewBtn.addActionListener(e -> viewOrders());
-        menuBtn.addActionListener(e -> viewMenu());
-        updateBtn.addActionListener(e -> updateOrder());
-
+        loadOrders();
         setVisible(true);
     }
 
-    private Connection getConn() throws Exception {
-        Class.forName("com.mysql.cj.jdbc.Driver");
-        return DriverManager.getConnection(url, user, password);
+    private Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(
+                "jdbc:mysql://localhost:3306/food_delivery_db",
+                "root",
+                DbConfig.getPassword()
+        );
     }
 
-    private void viewOrders() {
-        output.setText("");
+    private void loadOrders() {
+        model.setRowCount(0);
 
-        try (Connection conn = getConn();
-                PreparedStatement ps = conn.prepareStatement(
-                        "SELECT o.order_id, c.customer_name, o.status, o.total " +
-                                "FROM Orders o JOIN Customers c ON o.customer_id=c.customer_id " +
-                                "WHERE o.vendor_id=?")) {
+        String sql = "SELECT order_id, customer_id, status, total FROM Orders WHERE vendor_id = ?";
 
-            ps.setInt(1, vendorId);
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            ResultSet rs = ps.executeQuery();
+            stmt.setInt(1, vendorId);
+
+            ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
-                output.append(rs.getInt("order_id") + " | " +
-                        rs.getString("customer_name") + " | " +
-                        rs.getString("status") + " | $" + rs.getDouble("total") + "\n");
+                model.addRow(new Object[] {
+                        rs.getInt("order_id"),
+                        rs.getInt("customer_id"),
+                        rs.getString("status"),
+                        rs.getDouble("total")
+                });
             }
 
-            rs.close();
-
-        } catch (Exception ex) {
-            output.setText(ex.getMessage());
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error loading orders: " + e.getMessage());
         }
     }
 
-    private void viewMenu() {
-        output.setText("");
+    private void updateOrderStatus(String newStatus) {
+        int row = orderTable.getSelectedRow();
 
-        try (Connection conn = getConn();
-                PreparedStatement ps = conn.prepareStatement(
-                        "SELECT item_name, price FROM MenuItems WHERE vendor_id=?")) {
+        if (row == -1) {
+            JOptionPane.showMessageDialog(this, "Please select an order first.");
+            return;
+        }
 
-            ps.setInt(1, vendorId);
+        int orderId = Integer.parseInt(model.getValueAt(row, 0).toString());
 
-            ResultSet rs = ps.executeQuery();
+        String sql = "UPDATE Orders SET status = ? WHERE order_id = ? AND vendor_id = ?";
 
-            while (rs.next()) {
-                output.append(rs.getString("item_name") + " | $" + rs.getDouble("price") + "\n");
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, newStatus);
+            stmt.setInt(2, orderId);
+            stmt.setInt(3, vendorId);
+
+            int rowsUpdated = stmt.executeUpdate();
+
+            if (rowsUpdated > 0) {
+                JOptionPane.showMessageDialog(this, "Order status updated to: " + newStatus);
+            } else {
+                JOptionPane.showMessageDialog(this, "No order was updated.");
             }
 
-            rs.close();
+            loadOrders();
 
-        } catch (Exception ex) {
-            output.setText(ex.getMessage());
-        }
-    }
-
-    private void updateOrder() {
-        output.setText("");
-
-        try (Connection conn = getConn();
-                PreparedStatement ps = conn.prepareStatement(
-                        "UPDATE Orders SET status=? WHERE order_id=? AND vendor_id=?")) {
-
-            ps.setString(1, statusBox.getSelectedItem().toString());
-            ps.setInt(2, Integer.parseInt(orderIdField.getText()));
-            ps.setInt(3, vendorId);
-
-            int rows = ps.executeUpdate();
-            output.setText(rows + " order updated.");
-
-        } catch (Exception ex) {
-            output.setText(ex.getMessage());
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error updating order: " + e.getMessage());
         }
     }
 }
